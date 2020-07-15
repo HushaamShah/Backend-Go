@@ -7,7 +7,8 @@ import (
 	"io"
 	"log"
 	"os"
-//	"encoding/json"
+	"encoding/json"
+	"container/list"
 )
 
 type covidData struct{
@@ -22,8 +23,12 @@ type covidData struct{
 
 func main() {
 	// Open the file
-	mp := make(map[string]covidData)
+	//mp := make(map[int]covidData)
+	asd := list.New()
 	var data covidData
+	//var count int
+	//count = 0
+
 	csvfile, err := os.Open("data.csv")
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
@@ -50,7 +55,7 @@ func main() {
 		
 			
 			//fmt.Println(record[0])
-			//fmt.Println("asdfsdf")
+			fmt.Println("asdfsdf")
 			data.testpositive = record[0]
 			data.testperformed = record[1]
 			data.date = record[2]
@@ -58,16 +63,39 @@ func main() {
 			data.expired = record[4]
 			data.region = record[5]
 			data.admitted = record[6]
-			mp[record[6]] = data
-
+			//mp[count] = data
+			//count++
+			asd.PushBack(data)
 		}
 	}
-	fmt.Println(data.testpositive)
-	fmt.Println(data.testperformed)
-	fmt.Println(data.date)
-	fmt.Println(data.discharged)
-	fmt.Println(data.expired)
-	fmt.Println(data.region)
-	fmt.Println(data.admitted)
-	fmt.Println("asdfgh")
+	// fmt.Println(data.testpositive)
+	// fmt.Println(data.testperformed)
+	// fmt.Println(data.date)
+	// fmt.Println(data.discharged)
+	// fmt.Println(data.expired)
+	// fmt.Println(data.region)
+	// fmt.Println(data.admitted)
+	// fmt.Println("asdfgh")
+
+
+	// empData, err := json.Marshal(asd)   
+    // if err != nil {
+    //     fmt.Println(err.Error())
+    //     return
+    // }
+     
+    // jsonStr := string(empData)
+    // fmt.Println("The JSON data is:")
+	// fmt.Println(jsonStr)
+	
+	// for e := asd.Front(); e != nil; e = e.Next() {
+	// 	fmt.Println(e.Value)
+	// 	jsonStr := string(e.Value)
+	// 	fmt.Println("The JSON data is:")
+	// 	fmt.Println(jsonStr)
+	// }
+
+	slcB, _ := json.Marshal(asd)
+	fmt.Println(string(slcB))
+
 }
