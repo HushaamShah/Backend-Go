@@ -7,10 +7,10 @@ import (
 	"io"
 	"log"
 	"os"
-	"encoding/json"
+//	"encoding/json"
 )
 
-type covid_data struct{
+type covidData struct{
 	testperformed string
 	testpositive string
 	date string
@@ -22,7 +22,8 @@ type covid_data struct{
 
 func main() {
 	// Open the file
-	var data covid_data
+	mp := make(map[string]covidData)
+	var data covidData
 	csvfile, err := os.Open("data.csv")
 	if err != nil {
 		log.Fatalln("Couldn't open the csv file", err)
@@ -44,8 +45,8 @@ func main() {
 			log.Fatal(err)
 		}
 		if record[2] == "11/03/2020"{
-			slcB, _ := json.Marshal(record)
-			fmt.Println(string(slcB))
+			//slcB, _ := json.Marshal(record)
+			//fmt.Println(string(slcB))
 		
 			
 			//fmt.Println(record[0])
@@ -57,14 +58,16 @@ func main() {
 			data.expired = record[4]
 			data.region = record[5]
 			data.admitted = record[6]
+			mp[record[6]] = data
+
 		}
-		//fmt.Println(data.test_positive)
-		// fmt.Println(data.test_performed)
-		// fmt.Println(data.date)
-		// fmt.Println(data.discharged)
-		// fmt.Println(data.expired)
-		// fmt.Println(data.region)
-		// fmt.Println(data.admitted)
-		// fmt.Println("asdfgh")
 	}
+	fmt.Println(data.testpositive)
+	fmt.Println(data.testperformed)
+	fmt.Println(data.date)
+	fmt.Println(data.discharged)
+	fmt.Println(data.expired)
+	fmt.Println(data.region)
+	fmt.Println(data.admitted)
+	fmt.Println("asdfgh")
 }
