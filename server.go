@@ -1,3 +1,6 @@
+// Code Related to Server Connection was used from:
+// https://www.linode.com/docs/development/go/developing-udp-and-tcp-clients-and-servers-in-go/
+
 package main
 
 import (
@@ -6,12 +9,20 @@ import (
         "net"
         "os"
         "strings"
-		"time"
 		"io"
 		"log"
 		"encoding/csv"
 		"encoding/json"
 )
+
+type Query struct{
+	Region string `json:"region"`
+	Date string `json:"date"`
+}
+
+type JasonInput struct {
+	Query Query `json:"query"`	
+}
 
 
 type covidData struct{
@@ -25,83 +36,92 @@ type covidData struct{
 }
 
 func main() {
-
-	csvfile, err := os.Open("data.csv")
-	if err != nil {
-		log.Fatalln("Couldn't open the csv file", err)
+	arguments := os.Args
+	if len(arguments) == 1 {
+			fmt.Println("Please provide port number")
+			return
 	}
-	r := csv.NewReader(csvfile)
 
-        arguments := os.Args
-        if len(arguments) == 1 {
-                fmt.Println("Please provide port number")
-                return
-        }
+	PORT := ":" + arguments[1]
+	l, err := net.Listen("tcp", PORT)
+	if err != nil {
+			fmt.Println(err)
+			return
+	}
+	defer l.Close()
 
-        PORT := ":" + arguments[1]
-        l, err := net.Listen("tcp", PORT)
-        if err != nil {
-                fmt.Println(err)
-                return
-        }
-        defer l.Close()
+	c, err := l.Accept()
+	if err != nil {
+			fmt.Println(err)
+			return
+	}
 
-        c, err := l.Accept()
-        if err != nil {
-                fmt.Println(err)
-                return
-        }
+	for {
+			netData, err := bufio.NewReader(c).ReadString('\n')
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			//STOP command exits the Server
+			if strings.TrimSpace(string(netData)) == "STOP" {
+					fmt.Println("Exiting TCP server!")
+					return
+			}
 
-        for {
-				netData, err := bufio.NewReader(c).ReadString('\n')
-				text := strings.TrimSuffix(netData, "\n") // removing "\n from netData"
-				fmt.Println("netData = ",netData)
-				fmt.Println("text = ",text)
-                if err != nil {
-                        fmt.Println(err)
-                        return
-                }
-                if strings.TrimSpace(string(netData)) == "STOP" {
-                        fmt.Println("Exiting TCP server!")
-                        return
-                }
+			//Checcking if JSON is in valid format
+			if !json.Valid([]byte(netData)) {
+				c.Write([]byte("Invalid JSON Query \n Try Again \n"))
+				continue
+			}
+			
+			//Stores JSON data into JasonInput Structure
+			var reading JasonInput
+			json.Unmarshal([]byte(netData), &reading)
+			fmt.Printf("%+v\n", reading)
 
-                fmt.Print("-> ", string(netData))
-                t := time.Now()
-                myTime := t.Format(time.RFC3339) + "\n"
-				c.Write([]byte(string(netData)))
-				fmt.Print(myTime)
-				
-				//var asd string = string(netData)
 
-				for {
-					// Read each record from csv
-					record, err := r.Read()
-					if err == io.EOF {
-						break
-					}
-					if err != nil {
-						log.Fatal(err)
-					}
-					if (record[2] == text || record[5] == text){
-						data := covidData{
-							Testperformed:	record[0],
-							Testpositive:	record[1],
-							Date:			record[2],
-							Discharged:		record[3],
-							Expired: 		record[4],
-							Region:			record[5],
-							Admitted: 		record[6],
-						}
-						var jsonData []byte
-						jsonData, err = json.MarshalIndent(data, "", "   ")
-						if err != nil {
-							log.Println(err)
-						}
-						fmt.Println(string(jsonData))
-						c.Write([]byte(jsonData))
-					}
+			//Opening CSV file
+			csvfile, err := os.Open("data.csv")
+			if err != nil {
+				//Checks for error in opening CSV file
+				log.Fatalln("Couldn't open the csv file", err)
+			}
+			r := csv.NewReader(csvfile)		
+
+			for {
+				// Read each record from csv
+				record, err := r.Read()
+				if err == io.EOF {
+					//Checking for End of file
+					break
 				}
+				if err != nil {
+					log.Fatal(err)
+				}
+				//Comparing the Query to their respective column
+				//And storing data in covidData Structure
+				if (record[2] == reading.Query.Date || record[5] == reading.Query.Region){
+					data := covidData{
+						Testperformed:	record[0],
+						Testpositive:	record[1],
+						Date:			record[2],
+						Discharged:		record[3],
+						Expired: 		record[4],
+						Region:			record[5],
+						Admitted: 		record[6],
+					}
+					//Matching data is converted to JSON and sent
+					//Loop repeats untill End of file is found
+					//Nothing is stored in covidData permanently
+					var jsonData []byte
+					jsonData, err = json.MarshalIndent(data, "", "   ")
+					if err != nil {
+						log.Println(err)
+					}
+					fmt.Println(string(jsonData))
+					c.Write([]byte(jsonData))
+				}
+			}
         }
 }
     
