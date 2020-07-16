@@ -7,10 +7,22 @@ import (
         "os"
         "strings"
 		"time"
-//		"io"
+		"io"
 		"log"
 		"encoding/csv"
+		"encoding/json"
 )
+
+
+type covidData struct{
+	Testperformed 	string
+	Testpositive 	string
+	Date 			string
+	Discharged 		string
+	Expired 		string
+	Region 			string
+	Admitted 		string
+}
 
 func main() {
 
@@ -41,7 +53,10 @@ func main() {
         }
 
         for {
-                netData, err := bufio.NewReader(c).ReadString('\n')
+				netData, err := bufio.NewReader(c).ReadString('\n')
+				text := strings.TrimSuffix(netData, "\n") // removing "\n from netData"
+				fmt.Println("netData = ",netData)
+				fmt.Println("text = ",text)
                 if err != nil {
                         fmt.Println(err)
                         return
@@ -54,38 +69,39 @@ func main() {
                 fmt.Print("-> ", string(netData))
                 t := time.Now()
                 myTime := t.Format(time.RFC3339) + "\n"
-				c.Write([]byte("myTime"))
+				c.Write([]byte(string(netData)))
 				fmt.Print(myTime)
+				
+				//var asd string = string(netData)
 
-				// for {
-				// 	// Read each record from csv
-				// 	record, err := r.Read()
-				// 	if err == io.EOF {
-				// 		break
-				// 	}
-				// 	if err != nil {
-				// 		log.Fatal(err)
-				// 	}
-				// 	if record[5] == string(netData){
-				// 		//slcB, _ := json.Marshal(record)
-				// 		//fmt.Println(string(slcB))
-					
-						
-				// 		fmt.Println(record)
-				// 		c.Write([]byte(record))
-				// 		// fmt.Println("asdfsdf")
-				// 		// data.testpositive = record[0]
-				// 		// data.testperformed = record[1]
-				// 		// data.date = record[2]
-				// 		// data.discharged = record[3]
-				// 		// data.expired = record[4]
-				// 		// data.region = record[5]
-				// 		// data.admitted = record[6]
-				// 		//mp[count] = data
-				// 		//count++
-				// 		// asd.PushBack(data)
-				// 	}
-				// }
+				for {
+					// Read each record from csv
+					record, err := r.Read()
+					if err == io.EOF {
+						break
+					}
+					if err != nil {
+						log.Fatal(err)
+					}
+					if (record[2] == text || record[5] == text){
+						data := covidData{
+							Testperformed:	record[0],
+							Testpositive:	record[1],
+							Date:			record[2],
+							Discharged:		record[3],
+							Expired: 		record[4],
+							Region:			record[5],
+							Admitted: 		record[6],
+						}
+						var jsonData []byte
+						jsonData, err = json.MarshalIndent(data, "", "   ")
+						if err != nil {
+							log.Println(err)
+						}
+						fmt.Println(string(jsonData))
+						c.Write([]byte(jsonData))
+					}
+				}
         }
 }
     

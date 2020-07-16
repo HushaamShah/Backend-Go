@@ -8,24 +8,32 @@ import (
 	"log"
 	"os"
 	"encoding/json"
-	"container/list"
 )
 
+
+
+type FruitBasket struct {
+    Name    string
+    Fruit   []string
+    Id      int64  `json:"ref"`
+	private string // An unexported field is not encoded.
+	Region 			string
+}
+
 type covidData struct{
-	testperformed string
-	testpositive string
-	date string
-	discharged string
-	expired string
-	region string
-	admitted string
+	Testperformed 	string
+	Testpositive 	string
+	Date 			string
+	Discharged 		string
+	Expired 		string
+	Region 			string
+	Admitted 		string
 }
 
 func main() {
 	// Open the file
 	//mp := make(map[int]covidData)
-	asd := list.New()
-	var data covidData
+	//var data covidData
 	//var count int
 	//count = 0
 
@@ -55,17 +63,37 @@ func main() {
 		
 			
 			//fmt.Println(record[0])
-			fmt.Println("asdfsdf")
-			data.testpositive = record[0]
-			data.testperformed = record[1]
-			data.date = record[2]
-			data.discharged = record[3]
-			data.expired = record[4]
-			data.region = record[5]
-			data.admitted = record[6]
-			//mp[count] = data
-			//count++
-			asd.PushBack(data)
+			// fmt.Println("asdfsdf")
+			// data.testpositive = record[0]
+			// data.testperformed = record[1]
+			// data.date = record[2]
+			// data.discharged = record[3]
+			// data.expired = record[4]
+			// data.region = record[5]
+			// data.admitted = record[6]
+
+			data := covidData{
+				Testperformed:	record[0],
+				Testpositive:	record[1],
+				Date:			record[2],
+				Discharged:		record[3],
+				Expired: 		record[4],
+				Region:			record[5],
+				Admitted: 		record[6],
+			}
+			// basket := FruitBasket{
+			// Name:    record[5],
+			// Fruit:   []string{"Apple", "Banana", "Orange"},
+			// Id:      999,
+			// Region:	record[5],
+			// private: data.discharged,	
+			// }
+			var jsonData []byte
+			jsonData, err = json.MarshalIndent(data, "", "")
+			if err != nil {
+				log.Println(err)
+			}
+			fmt.Println(string(jsonData))
 		}
 	}
 	// fmt.Println(data.testpositive)
@@ -78,24 +106,18 @@ func main() {
 	// fmt.Println("asdfgh")
 
 
-	// empData, err := json.Marshal(asd)   
-    // if err != nil {
-    //     fmt.Println(err.Error())
-    //     return
-    // }
-     
-    // jsonStr := string(empData)
-    // fmt.Println("The JSON data is:")
-	// fmt.Println(jsonStr)
-	
-	// for e := asd.Front(); e != nil; e = e.Next() {
-	// 	fmt.Println(e.Value)
-	// 	jsonStr := string(e.Value)
-	// 	fmt.Println("The JSON data is:")
-	// 	fmt.Println(jsonStr)
+	// basket := FruitBasket{
+	// 	Name:    data.region,
+	// 	Fruit:   []string{"Apple", "Banana", "Orange"},
+	// 	Id:      999,
+	// 	private: data.discharged,
 	// }
 
-	slcB, _ := json.Marshal(asd)
-	fmt.Println(string(slcB))
 
+	// var jsonData []byte
+	// jsonData, err = json.Marshal(data)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// fmt.Println(string(jsonData))
 }
